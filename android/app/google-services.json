@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "127466433935",
+    "project_id": "green-transit",
+    "storage_bucket": "green-transit.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:127466433935:android:a30dfb05e3b9da07f82ffa",
+        "android_client_info": {
+          "package_name": "com.example.greenware"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "127466433935-bg6889rhj4jad0ci7n7ap2j7s71kjekq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA91qdAWGit70t9iUPtGbuLsO75Jw-O-go"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "127466433935-bg6889rhj4jad0ci7n7ap2j7s71kjekq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "127466433935-o3eoebakgle4ipp36gduq1eeqs3glmvo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.greenware"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
