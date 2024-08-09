@@ -60,7 +60,7 @@ class _LoginState extends State<Login> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(75),
                     child: Image.asset(
-                      "assets/lodo idea 2.2.png",
+                      "assets/logo diminished.png",
                       fit: BoxFit.cover,
                     ),
                   ),

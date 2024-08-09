@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:greenware/booking/book.dart';
 import 'package:greenware/colorextensions.dart';
 import 'package:greenware/firebase_options.dart';
 import 'package:greenware/home/home.dart';
@@ -34,7 +35,7 @@ class MyApp extends StatelessWidget {
               theme: ThemeData(useMaterial3: true, primaryColor: TColor.purple),
               debugShowCheckedModeBanner: false,
               title: 'Mobilitas',
-              home: HomePage(),
+              home: BookCycle(),
             );
           } else {
             return MaterialApp(

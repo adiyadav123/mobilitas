@@ -31,7 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   firebase_auth: ^4.17.8
-  flutter_lints: ^2.0.0
+  flutter_lints: ^4.0.0
   slide_to_act: ^2.0.2
   firebase_core: ^2.27.0
   google_sign_in: ^6.2.1
@@ -42,8 +42,8 @@ dependencies:
   dio: ^5.5.0+1
   flutter_polyline_points: ^2.0.0
   google_maps_flutter: ^2.5.3
-  permission_handler: ^10.2.0
-  geolocator: ^7.6.2
+  permission_handler: ^11.3.1
+  geolocator: ^11.1.0
   flutter_typeahead: ^5.2.0
   flutter_google_places_sdk: ^0.3.8
   flutter_google_maps_webservices: ^1.1.1
@@ -52,6 +52,14 @@ dependencies:
   pinput: ^5.0.0
   rounded_loading_button_plus: ^3.0.1
   geocoding: ^3.0.0
+  flutter_svg: ^2.0.10+1
+  location: ^6.0.2
+  bluetooth_low_energy: ^6.0.2
+  flutter_blue_plus: ^1.16.2
+  flutter_bluetooth_serial: ^0.4.0
+  ai_barcode_scanner: ^3.4.3
+  flutter_barcode_scanner: ^2.0.0
+
 
 dev_dependencies:
   flutter_test:
@@ -79,7 +87,9 @@ flutter:
     - assets/google.png
     - assets/github.png
     - assets/namee.png
+    - assets/name.png
     - assets/lodo idea 2.2.png
+    - assets/logo diminished.png
     - assets/cancel.png
   #   - images/a_dot_ham.jpeg
 

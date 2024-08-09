@@ -1,15 +1,16 @@
-import 'dart:async';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_styled_toast/flutter_styled_toast.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:greenware/booking/book.dart';
 import 'package:greenware/colorextensions.dart';
 import 'package:greenware/login/login.dart';
 import 'package:greenware/profile/profile.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:location/location.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,29 +23,130 @@ class _HomePageState extends State<HomePage> {
   var lat = 26.84096545294521;
   var lon = 80.93316410056923;
 
-  String? _selectedLocation;
-  List<String> _suggestions = [
-    'Tarna',
-    'Nadesar',
-    'Pandeypur',
-    'Chandmari',
-    'Bhojubeer',
-    "Shivpur"
-  ];
+  final Map<String, List<double>> _places = {
+    'Tarna': [25.37336088740846, 82.91946307380431],
+    'Nadesar': [25.34234866289763, 82.98052125134613],
+    'Pandeypur': [25.349647850467502, 82.99348364256039],
+    'Chandmari': [25.379155524365572, 82.97050556177106],
+    'Bhojubeer': [25.35299080123028, 82.97566495370323],
+    'Shivpur': [25.354283670824657, 82.9657647888067],
+  };
 
-  var nadesar = [25.34234866289763, 82.98052125134613];
-  var tarna = [25.37336088740846, 82.91946307380431];
-  var chandmari = [25.379155524365572, 82.97050556177106];
-  var pandeypur = [25.349647850467502, 82.99348364256039];
-  var bhojubeer = [25.35299080123028, 82.97566495370323];
-  var shivpur = [25.354283670824657, 82.9657647888067];
+  // var nadesar = [25.34234866289763, 82.98052125134613];
+  // var tarna = [25.37336088740846, 82.91946307380431];
+  // var chandmari = [25.379155524365572, 82.97050556177106];
+  // var pandeypur = [25.349647850467502, 82.99348364256039];
+  // var bhojubeer = [25.35299080123028, 82.97566495370323];
+  // var shivpur = [25.354283670824657, 82.9657647888067];
+  String? _selectedLocation;
+  List<double>? _selectedLocationCoords;
 
   String? _selectedDestination;
+  List<double>? _selectedDestinationCoords;
+
+  final fixedCharge = 5;
+  final perKmCharge = 2;
+  double? distanceInKm;
+  double? totalFare;
+
+  String googleApiKey = "AIzaSyAebh-ZBqHRXAKHJhLr_ztwBkfLZPZr_hM";
 
   User? auth;
   String? userPhoto;
 
+  Set<Marker> _markers = {};
+
   GoogleMapController? _mapController;
+  Set<Polyline> _polylines = {};
+
+  void getPolylines() async {
+    PolylinePoints polylinePoints = PolylinePoints();
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+        googleApiKey,
+        PointLatLng(_selectedLocationCoords![0], _selectedLocationCoords![1]),
+        PointLatLng(
+            _selectedDestinationCoords![0], _selectedDestinationCoords![1]));
+
+    if (result.points.isNotEmpty) {
+      setState(() {
+        _polylines.add(Polyline(
+            polylineId: PolylineId('route'),
+            color: TColor.purple,
+            points: result.points
+                .map((e) => LatLng(e.latitude, e.longitude))
+                .toList()));
+      });
+    }
+  }
+
+  var chandmari = LatLng(25.379155524365572, 82.97050556177106);
+  var bhojubeer = LatLng(35.299080123028, 82.97566495370323);
+
+  void getDistance() {
+    double distanceInMeters = Geolocator.distanceBetween(
+        _selectedLocationCoords![0],
+        _selectedLocationCoords![1],
+        _selectedDestinationCoords![0],
+        _selectedDestinationCoords![1]);
+
+    if (distanceInMeters != null) {
+      if (distanceInMeters <= 3000) {
+        setState(() {
+          distanceInKm = distanceInMeters / 1000;
+          totalFare = fixedCharge.toDouble();
+        });
+      } else {
+        setState(() {
+          distanceInKm = distanceInMeters / 1000;
+          totalFare = distanceInKm! * perKmCharge;
+        });
+      }
+    } else {
+      setState(() {
+        totalFare = 0;
+      });
+    }
+  }
+
+  void onPlaceSelected(String? place, bool isDestination) {
+    if (place != null && _places.containsKey(place)) {
+      List<double> location = _places[place]!;
+
+      if (isDestination) {
+        _markers.add(Marker(
+          markerId: MarkerId('destination'),
+          position: LatLng(location[0], location[1]),
+        ));
+        setState(() {
+          _selectedDestinationCoords = location;
+        });
+
+        _mapController?.animateCamera(CameraUpdate.newCameraPosition(
+            CameraPosition(
+                target: LatLng(location[0], location[1]), zoom: 12)));
+      } else {
+        _markers.add(Marker(
+          markerId: MarkerId('startpoint'),
+          position: LatLng(location[0], location[1]),
+        ));
+        setState(() {
+          _selectedLocationCoords = location;
+        });
+
+        _mapController?.animateCamera(CameraUpdate.newCameraPosition(
+            CameraPosition(
+                target: LatLng(location[0], location[1]), zoom: 12)));
+      }
+    }
+
+    if (_selectedLocationCoords != null && _selectedDestinationCoords != null) {
+      getDistance();
+      getPolylines();
+
+      print('Distance: $distanceInKm');
+      print('Total Fare: $totalFare');
+    }
+  }
 
   @override
   void initState() {
@@ -66,15 +168,29 @@ class _HomePageState extends State<HomePage> {
   // get photo url
 
   void _getCurrentLocation() async {
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    setState(() {
-      lat = position.latitude;
-      lon = position.longitude;
-    });
+    // Position position = await Geolocator.getCurrentPosition(
+    //     desiredAccuracy: LocationAccuracy.high);
+    // setState(() {
+    //   lat = position.latitude;
+    //   lon = position.longitude;
+    // });
 
-    _mapController?.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: LatLng(lat, lon), zoom: 19)));
+    // _mapController?.animateCamera(CameraUpdate.newCameraPosition(
+    //     CameraPosition(target: LatLng(lat, lon), zoom: 19)));
+    Location location = Location();
+    PermissionStatus permission = await location.hasPermission();
+    if (permission == PermissionStatus.denied) {
+      permission = await location.requestPermission();
+    }
+    if (permission == PermissionStatus.granted) {
+      LocationData locationData = await location.getLocation();
+      setState(() {
+        lat = locationData.latitude!;
+        lon = locationData.longitude!;
+      });
+      _mapController?.animateCamera(CameraUpdate.newCameraPosition(
+          CameraPosition(target: LatLng(lat, lon), zoom: 19)));
+    }
   }
 
   @override
@@ -139,7 +255,7 @@ class _HomePageState extends State<HomePage> {
                                 color: Colors.white,
                               )),
                         ),
-                        Image.asset('assets/namee.png'),
+                        Image.asset('assets/name.png'),
                         GestureDetector(
                           onTap: () => {
                             Navigator.push(
@@ -180,6 +296,8 @@ class _HomePageState extends State<HomePage> {
                     onMapCreated: (GoogleMapController controller) {
                       _mapController = controller;
                     },
+                    markers: _markers,
+                    polylines: _polylines,
                     initialCameraPosition:
                         CameraPosition(target: LatLng(lat, lon), zoom: 10),
                     myLocationEnabled: true,
@@ -265,6 +383,8 @@ class _HomePageState extends State<HomePage> {
       child: IconButton(
           onPressed: () {
             _getCurrentLocation();
+            print(_selectedDestination);
+            print(_selectedLocation);
           },
           icon: const Icon(
             Icons.my_location,
@@ -293,17 +413,17 @@ class _HomePageState extends State<HomePage> {
           iconEnabledColor: TColor.textColor,
           iconDisabledColor: Colors.white,
           underline: Container(),
-          items: _suggestions.map((String suggestion) {
+          items: _places.keys.map((String value) {
             return DropdownMenuItem<String>(
-              value: suggestion,
-              child:
-                  Text(suggestion, style: TextStyle(color: TColor.textColor)),
+              value: value,
+              child: Text(value, style: TextStyle(color: TColor.textColor)),
             );
           }).toList(),
           onChanged: (String? newValue) {
             setState(() {
               _selectedLocation = newValue;
             });
+            onPlaceSelected(newValue, false);
           },
         ),
       ),
@@ -330,17 +450,17 @@ class _HomePageState extends State<HomePage> {
           iconEnabledColor: TColor.textColor,
           iconDisabledColor: Colors.white,
           underline: Container(),
-          items: _suggestions.map((String suggestion) {
+          items: _places.keys.map((String value) {
             return DropdownMenuItem<String>(
-              value: suggestion,
-              child:
-                  Text(suggestion, style: TextStyle(color: TColor.textColor)),
+              value: value,
+              child: Text(value, style: TextStyle(color: TColor.textColor)),
             );
           }).toList(),
           onChanged: (String? newValue) {
             setState(() {
               _selectedDestination = newValue;
             });
+            onPlaceSelected(newValue, true);
           },
         ),
       ),
@@ -348,48 +468,72 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _bookButton() {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      decoration: BoxDecoration(
-          color: TColor.black, borderRadius: BorderRadius.circular(40)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 20.0),
-        child: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Book Now',
-                  style: TextStyle(
-                      color: TColor.white,
-                      fontSize: 20,
-                      fontFamily: "San Fransisco",
-                      fontWeight: FontWeight.bold)),
-              Row(
-                children: [
-                  Text(
-                    "Rs. 9",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                  SizedBox(
-                    width: 15,
-                  ),
-                  Container(
-                    height: 40,
-                    width: 40,
-                    decoration: BoxDecoration(
-                        color: TColor.purple,
-                        borderRadius: BorderRadius.circular(20)),
-                    child: Icon(
-                      Icons.arrow_forward_ios,
-                      color: TColor.white,
+    return GestureDetector(
+      onTap: () {
+        _directToBook();
+      },
+      child: Container(
+        width: MediaQuery.of(context).size.width,
+        decoration: BoxDecoration(
+            color: TColor.black, borderRadius: BorderRadius.circular(40)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 11.0),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 15,
                     ),
-                  )
-                ],
-              )
-            ],
+                    Text('Book Now',
+                        style: TextStyle(
+                            color: TColor.white,
+                            fontSize: 20,
+                            fontFamily: "San Fransisco",
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "₹ ${totalFare?.toStringAsFixed(2) ?? '0.00'}",
+                      style: TextStyle(color: Colors.white, fontSize: 20),
+                    ),
+                    SizedBox(
+                      width: 15,
+                    ),
+                    Container(
+                      height: 40,
+                      width: 40,
+                      decoration: BoxDecoration(
+                          color: TColor.white,
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Icon(
+                        Icons.arrow_forward_ios,
+                        color: TColor.black,
+                      ),
+                    )
+                  ],
+                )
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  _directToBook() {
+    if (_selectedDestinationCoords == null || _selectedLocationCoords == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a location')));
+      return;
+    }
+
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => const BookCycle()));
   }
 }

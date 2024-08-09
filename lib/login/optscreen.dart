@@ -74,7 +74,7 @@ class _OTPScreenState extends State<OTPScreen> {
                               "Verify your number",
                               style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 25,
+                                  fontSize: 20,
                                   fontFamily: "Poppins",
                                   fontWeight: FontWeight.bold),
                             ),
@@ -118,7 +118,7 @@ class _OTPScreenState extends State<OTPScreen> {
                             "Enter the OTP sent to your number",
                             style: TextStyle(
                                 color: TColor.black,
-                                fontSize: 20,
+                                fontSize: 19,
                                 fontFamily: "Google Sans",
                                 fontWeight: FontWeight.bold),
                           ),
@@ -175,6 +175,7 @@ class _OTPScreenState extends State<OTPScreen> {
             'photo': user!.photoURL,
             'phone': widget.phoneNumber,
             'totalDistance': 0,
+            'credits': 100,
             'totalRides': 0,
             'totalSpent': 0,
             'rides': {
