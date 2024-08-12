@@ -1,15 +1,26 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:math';
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:greenware/colorextensions.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BookCycle extends StatefulWidget {
-  const BookCycle({super.key});
+  final double? price;
+  final String? startingPoint;
+  final String? finalPoint;
+  const BookCycle(
+      {super.key,
+      required this.price,
+      required this.startingPoint,
+      required this.finalPoint});
 
   @override
   State<BookCycle> createState() => _BookCycleState();
@@ -22,11 +33,13 @@ class _BookCycleState extends State<BookCycle> {
     requestBluetoothPermission();
   }
 
-  
+  String _scanResult = '';
+  BluetoothConnection? _connection;
 
   StreamSubscription<BluetoothDiscoveryResult>? _streamSubscription;
 
   var _isGranted = 'Unknown';
+  bool _isConnected = false;
 
   List<BluetoothDevice> _devices = [];
 
@@ -48,9 +61,36 @@ class _BookCycleState extends State<BookCycle> {
     }
   }
 
+  Future<void> scanCode() async {
+    String? barCodeScanRes;
+    PermissionStatus permissionStatus = await Permission.camera.request();
+
+    if (permissionStatus.isGranted) {
+      try {
+        print("Scanning");
+        barCodeScanRes = await FlutterBarcodeScanner.scanBarcode(
+            "#ff6666", "Cancel", true, ScanMode.QR);
+      } on PlatformException {
+        barCodeScanRes = 'Failed to get platform version.';
+      }
+      setState(() {
+        _scanResult = barCodeScanRes ?? '';
+      });
+
+      if (_scanResult.isNotEmpty) {
+        connect(_scanResult);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Camera permission denied"),
+      ));
+    }
+  }
+
   void startScan() async {
     await FlutterBluetoothSerial.instance.cancelDiscovery();
     _devices.clear();
+    await _connection?.close();
 
     if (await FlutterBluetoothSerial.instance.state ==
         BluetoothState.STATE_OFF) {
@@ -62,6 +102,128 @@ class _BookCycleState extends State<BookCycle> {
       setState(() {
         _devices.add(event.device);
       });
+    });
+  }
+
+  void connect(String address) async {
+    if (_isGranted == 'Bluetooth permission granted') {
+      _devices.clear();
+      await _connection?.close();
+
+      if (await FlutterBluetoothSerial.instance.state ==
+          BluetoothState.STATE_OFF) {
+        await FlutterBluetoothSerial.instance.requestEnable();
+      }
+      try {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Connecting"),
+        ));
+        await BluetoothConnection.toAddress(address).then((value) {
+          _connection = value;
+        });
+        setState(() {
+          _isConnected = true;
+        });
+
+        _connection!.input!.listen(null).onDone(() {
+          if (_isConnected) {
+            print("Disconnected by remote request");
+            setState(() {
+              _isConnected = false;
+            });
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Connected"),
+        ));
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Failed to connect"),
+        ));
+        print(e);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Bluetooth permission denied"),
+      ));
+    }
+  }
+
+  void checkConnection() async {
+    if (_connection != null) {
+      if (_connection!.isConnected) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Connected"),
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Not connected"),
+        ));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Not connected"),
+      ));
+    }
+  }
+
+  Future<void> sendData(String text) async {
+    if (_connection != null) {
+      if (_connection!.isConnected) {
+        _connection!.output.add(utf8.encode(text));
+        await _connection!.output.allSent.then((_) => {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text("Data sent"),
+              )),
+            });
+      }
+    }
+  }
+
+  void disconnect() async {
+    if (_connection != null) {
+      if (_connection!.isConnected) {
+        await _connection!.close();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Disconnected"),
+        ));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Not connected"),
+      ));
+    }
+  }
+
+  void updateFirebase() async {
+    var user = FirebaseAuth.instance.currentUser;
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DocumentReference documentReference =
+        firestore.collection('users').doc(user!.uid);
+
+    var doc = await documentReference.get();
+    int currentDistance = (doc['totalDistance'] as num).toInt();
+    int currentRides = (doc['totalRides'] as num).toInt();
+    int currentAmount = (doc['totalSpent'] as num).toInt();
+
+    var data = {
+      'rides': {
+        'ride${Random().nextInt(100)}': {
+          'endTime': Timestamp.now(),
+          'price': 10,
+          'review': 4,
+          'startPoint': widget.startingPoint,
+          'finalPoint': widget.finalPoint,
+          'startTime': Timestamp.now()
+        }
+      },
+      'totalSpent': (currentAmount.toInt()) + (widget.price!).toInt(),
+      'totalDistance': (currentDistance).toInt() + widget.price! ~/ 2,
+      'totalRides': (currentRides).toInt() + 1
+    };
+
+    documentReference.set(data, SetOptions(merge: true)).then((value) {
+      print("data updated");
     });
   }
 
@@ -106,7 +268,7 @@ class _BookCycleState extends State<BookCycle> {
                           width: 20,
                         ),
                         Text(
-                          "Book a cycle",
+                          "Book an e-cycle",
                           style: TextStyle(
                               color: Colors.white,
                               fontSize: 25,
@@ -137,56 +299,67 @@ class _BookCycleState extends State<BookCycle> {
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        Text(
-                          "Select a cycle",
-                          style: TextStyle(
-                              color: TColor.black,
-                              fontSize: 20,
-                              fontFamily: "Sans Fransisco",
-                              fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(
-                          height: 20,
-                        ),
-                        _devices.length == 0
-                            ? Text("No devices found")
-                            : SizedBox(
-                                height: 200,
-                                child: ListView.builder(
-                                  itemCount: _devices.length,
-                                  itemBuilder: (context, index) {
-                                    return ListTile(
-                                      title: Text(
-                                          (_devices[index].name.toString())),
-                                      subtitle: Text(_devices[index].address),
-                                      onTap: () {
-                                        Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    BookCycle()));
-                                      },
-                                    );
-                                  },
-                                ),
-                              ),
-                        SizedBox(
-                          height: 20,
-                        ),
-                        Container(
-                          width: MediaQuery.of(context).size.width,
-                          child: ElevatedButton(
-                            onPressed: startScan,
-                            child: Text("Scan for devices"),
+                        Center(
+                          child: Text(
+                            "Select to unlock an e-cycle",
+                            style: TextStyle(
+                                color: TColor.black,
+                                fontSize: 20,
+                                fontFamily: "Sans Fransisco",
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
-                        Text(
-                          "OR",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        SizedBox(
+                          height: 20,
                         ),
                         Container(
                             width: MediaQuery.of(context).size.width,
                             child: ElevatedButton(
-                                onPressed: () {}, child: Text("Scan QR")))
+                                onPressed: () {
+                                  scanCode();
+                                },
+                                child: Text("Scan QR"))),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        SizedBox(
+                            width: MediaQuery.of(context).size.width,
+                            child: ElevatedButton(
+                                onPressed: () {
+                                  showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          title: Text("Pay and unlock"),
+                                          content: Container(
+                                            height: 130,
+                                            width: 150,
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                    "Pay Rs. ${widget.price?.toStringAsFixed(2)} to unlock the cycle"),
+                                                SizedBox(
+                                                  height: 20,
+                                                ),
+                                                ElevatedButton(
+                                                    onPressed: () {
+                                                      sendData("YES");
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                      updateFirebase();
+                                                    },
+                                                    child:
+                                                        Text("Pay and unlock")),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      });
+                                },
+                                child: Text("Open Lock"))),
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.7,
+                        ),
                       ],
                     ),
                   )

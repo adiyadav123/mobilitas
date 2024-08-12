@@ -28,6 +28,30 @@ class _ProfilePageState extends State<ProfilePage> {
 
     getData();
     checkUserData();
+    checkFirestoreData();
+  }
+
+  String? distance;
+  String? rides;
+  String? money;
+
+  void checkFirestoreData() async {
+    print("checking data");
+    var user = FirebaseAuth.instance.currentUser;
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DocumentReference documentReference =
+        firestore.collection('users').doc(user!.uid);
+
+    var doc = await documentReference.get();
+    int currentDistance = (doc['totalDistance'] as num).toInt();
+    int currentRides = (doc['totalRides'] as num).toInt();
+    int currentAmount = (doc['totalSpent'] as num).toInt();
+
+    setState(() {
+      distance = currentDistance!.toStringAsFixed(1);
+      rides = currentRides!.toStringAsFixed(1);
+      money = currentAmount!.toStringAsFixed(1);
+    });
   }
 
   void checkUserData() async {
@@ -167,9 +191,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            cards("Trips", "0", Icons.bike_scooter),
-                            cards("Coupons", "0", Icons.card_giftcard),
-                            cards("Spent", "0", Icons.payment),
+                            cards(
+                                "Trips", "${rides ?? '0'}", Icons.bike_scooter),
+                            cards("Coupons", "1", Icons.card_giftcard),
+                            cards("Spent", "${money ?? 0}", Icons.payment),
                           ],
                         ),
                         SizedBox(
@@ -178,9 +203,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            cards("Distance", "0", Icons.map),
+                            cards("Distance", "${distance ?? '0'}", Icons.map),
                             cards("Pay Later", "0", Icons.currency_rupee),
-                            cards("Carbon", "0", Icons.eco),
+                            cards("Carbon", "1650g", Icons.eco),
                           ],
                         ),
                         SizedBox(

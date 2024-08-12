@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
               theme: ThemeData(useMaterial3: true, primaryColor: TColor.purple),
               debugShowCheckedModeBanner: false,
               title: 'Mobilitas',
-              home: BookCycle(),
+              home: HomePage(),
             );
           } else {
             return MaterialApp(

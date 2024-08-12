@@ -99,7 +99,7 @@ class _PhoneLoginState extends State<PhoneLogin> {
                                 "Enter your phone number and name",
                                 style: TextStyle(
                                     color: Colors.black,
-                                    fontSize: 20,
+                                    fontSize: 16,
                                     fontFamily: "Sans Fransisco",
                                     fontWeight: FontWeight.bold),
                               ),

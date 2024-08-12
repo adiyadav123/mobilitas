@@ -47,7 +47,7 @@ class _HomePageState extends State<HomePage> {
   final fixedCharge = 5;
   final perKmCharge = 2;
   double? distanceInKm;
-  double? totalFare;
+  double totalFare = 0;
 
   String googleApiKey = "AIzaSyAebh-ZBqHRXAKHJhLr_ztwBkfLZPZr_hM";
 
@@ -534,6 +534,6 @@ class _HomePageState extends State<HomePage> {
     }
 
     Navigator.push(
-        context, MaterialPageRoute(builder: (context) => const BookCycle()));
+        context, MaterialPageRoute(builder: (context) => BookCycle(price: totalFare, startingPoint: _selectedLocation, finalPoint: _selectedDestination,)));
   }
 }

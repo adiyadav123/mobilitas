@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:greenware/colorextensions.dart';
 import 'package:greenware/home/home.dart';
 import 'package:greenware/login/phone.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:slide_to_act/slide_to_act.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -31,6 +32,16 @@ class _LoginState extends State<Login> {
           context: context, animation: StyledToastAnimation.slideFromTopFade);
     } else {
       showToast("Location permission denied",
+          context: context, animation: StyledToastAnimation.slideFromTopFade);
+    }
+  }
+
+  Future<void> checkInternetConnection() async {
+    bool hasInternet = await InternetConnectionChecker().hasConnection;
+
+    if (hasInternet) {
+    } else {
+      showToast("No internet connection",
           context: context, animation: StyledToastAnimation.slideFromTopFade);
     }
   }
