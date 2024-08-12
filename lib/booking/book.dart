@@ -22,6 +22,8 @@ class _BookCycleState extends State<BookCycle> {
     requestBluetoothPermission();
   }
 
+  
+
   StreamSubscription<BluetoothDiscoveryResult>? _streamSubscription;
 
   var _isGranted = 'Unknown';
