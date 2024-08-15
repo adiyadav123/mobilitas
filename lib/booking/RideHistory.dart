@@ -34,65 +34,60 @@ class _RideHistoryWidgetState extends State<RideHistoryWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: getRidesFromFirebase(),
-        builder: (BuildContext context, AsyncSnapshot<List<Ride>> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Scaffold(
-              body: Center(
-                child: Text("Error: ${snapshot.error}"),
-              ),
-            );
-          } else {
-            List<Ride> rides = snapshot.data ?? [];
-            if (rides.isEmpty) {
-              return Scaffold(
-                backgroundColor: TColor.purple,
-                body: SafeArea(
-                  child: Column(
-                    children: [
-                      nav("Ride History"),
-                      Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Text(
-                              "No rides yet",
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: TColor.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+    return Scaffold(
+      backgroundColor: TColor.purple,
+      body: SafeArea(
+        child: Column(
+          children: [
+            nav("Ride History"),
+            Expanded(
+              child: FutureBuilder<List<Ride>>(
+                future: getRidesFromFirebase(),
+                builder:
+                    (BuildContext context, AsyncSnapshot<List<Ride>> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else {
+                    List<Ride> rides = snapshot.data ?? [];
+                    if (rides.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Text(
+                            "No rides yet",
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: TColor.white,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            } else {
-              return Scaffold(
-                backgroundColor: TColor.purple,
-                body: SafeArea(
-                    child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      nav("Ride History"),
-                      content(),
-                    ],
-                  ),
-                )),
-              );
-            }
-          }
-        });
+                        ),
+                      );
+                    } else {
+                      return ListView.builder(
+                        itemCount: rides.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          String startTimeString = DateFormat('kk:mm')
+                              .format(rides[index].startTime.toDate());
+                          String endTimeString = DateFormat('kk:mm')
+                              .format(rides[index].endTime.toDate());
+                          return ListTile(
+                            subtitle: rideItem(
+                                rides[index], startTimeString, endTimeString),
+                          );
+                        },
+                      );
+                    }
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget nav(page) {
@@ -139,125 +134,55 @@ class _RideHistoryWidgetState extends State<RideHistoryWidget> {
     );
   }
 
-  Widget content() {
+  Widget rideItem(Ride ride, String startTime, String endTime) {
     return Container(
-      width: MediaQuery.of(context).size.width,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-        color: Colors.white,
+        color: TColor.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 5,
-            blurRadius: 7,
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 0,
+            blurRadius: 10,
             offset: const Offset(0, 3),
           ),
         ],
+        border: Border.all(color: TColor.borderStroke),
+        borderRadius: BorderRadius.circular(20),
       ),
+      height: 220,
+      width: MediaQuery.of(context).size.width,
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "History",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Container(
+            width: MediaQuery.of(context).size.width,
+            decoration: BoxDecoration(
+              color: TColor.rideContainer,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              border: Border.symmetric(
+                horizontal: BorderSide(
+                  color: TColor.borderStroke,
                 ),
-              ],
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: [
+                  points(
+                      ride.startPoint, startTime, Icons.circle, TColor.purple),
+                  SizedBox(height: 30),
+                  points(ride.finalPoint, endTime, Icons.pin_drop,
+                      TColor.locationPinColor),
+                ],
+              ),
             ),
           ),
-          FutureBuilder<List<Ride>>(
-            future: getRidesFromFirebase(),
-            builder:
-                (BuildContext context, AsyncSnapshot<List<Ride>> snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
-              } else if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              } else {
-                List<Ride> rides = snapshot.data ?? [];
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: rides.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    String startTimeString = DateFormat('kk:mm')
-                        .format(rides[index].startTime.toDate());
-                    String endTimeString = DateFormat('kk:mm')
-                        .format(rides[index].endTime.toDate());
-                    return ListTile(
-                        subtitle: Container(
-                      decoration: BoxDecoration(
-                        color: TColor.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
-                            spreadRadius: 0,
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                        border: Border.all(color: TColor.borderStroke),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      height: 220,
-                      width: MediaQuery.of(context).size.width,
-                      child: Column(
-                        children: [
-                          Container(
-                            width: MediaQuery.of(context).size.width,
-                            decoration: BoxDecoration(
-                              color: TColor.rideContainer,
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(20),
-                                topRight: Radius.circular(20),
-                              ),
-                              border: Border.symmetric(
-                                horizontal: BorderSide(
-                                  color: TColor.borderStroke,
-                                ),
-                              ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: Column(
-                                children: [
-                                  points(
-                                      rides[index].startPoint,
-                                      startTimeString,
-                                      Icons.circle,
-                                      TColor.purple),
-                                  SizedBox(
-                                    height: 30,
-                                  ),
-                                  points(rides[index].finalPoint, endTimeString,
-                                      Icons.pin_drop, TColor.locationPinColor),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: disTime(rides[index].distance.toString(),
-                                rides[index].price.toString()),
-                          ),
-                        ],
-                      ),
-                    ));
-                  },
-                );
-              }
-            },
-          ),
-          SizedBox(
-            height: 230,
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: disTime(ride.distance.toString(), ride.price.toString()),
           ),
         ],
       ),
@@ -271,9 +196,7 @@ class _RideHistoryWidgetState extends State<RideHistoryWidget> {
           child: Row(
             children: [
               Icon(icon, color: color, size: 25),
-              SizedBox(
-                width: 10,
-              ),
+              SizedBox(width: 10),
               Text(
                 location,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

@@ -215,7 +215,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            cards("Distance", "${distance ?? '0'}", Icons.map),
+                            cards("Distance",
+                                "${distance.toString() ?? '0'} km", Icons.map),
                             cards("Pay Later", "0", Icons.currency_rupee),
                             cards("Carbon", "${carbon}g", Icons.eco),
                           ],

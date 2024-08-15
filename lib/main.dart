@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
               theme: ThemeData(useMaterial3: true, primaryColor: TColor.purple),
               debugShowCheckedModeBanner: false,
               title: 'Mobilitas',
-              home: const RideHistoryWidget(),
+              home: const HomePage(),
             );
           } else {
             return MaterialApp(
