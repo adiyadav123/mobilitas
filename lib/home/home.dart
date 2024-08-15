@@ -45,9 +45,9 @@ class _HomePageState extends State<HomePage> {
   List<double>? _selectedDestinationCoords;
 
   final fixedCharge = 5;
-  final perKmCharge = 2;
+  final perKmCharge = 3;
   double? distanceInKm;
-  double totalFare = 0;
+  double totalFare = 1;
 
   String googleApiKey = "AIzaSyAebh-ZBqHRXAKHJhLr_ztwBkfLZPZr_hM";
 
@@ -59,25 +59,25 @@ class _HomePageState extends State<HomePage> {
   GoogleMapController? _mapController;
   Set<Polyline> _polylines = {};
 
-  void getPolylines() async {
-    PolylinePoints polylinePoints = PolylinePoints();
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-        googleApiKey,
-        PointLatLng(_selectedLocationCoords![0], _selectedLocationCoords![1]),
-        PointLatLng(
-            _selectedDestinationCoords![0], _selectedDestinationCoords![1]));
+  // void getPolylines() async {
+  //   PolylinePoints polylinePoints = PolylinePoints();
+  //   PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+  //       googleApiKey,
+  //       PointLatLng(_selectedLocationCoords![0], _selectedLocationCoords![1]),
+  //       PointLatLng(
+  //           _selectedDestinationCoords![0], _selectedDestinationCoords![1]));
 
-    if (result.points.isNotEmpty) {
-      setState(() {
-        _polylines.add(Polyline(
-            polylineId: PolylineId('route'),
-            color: TColor.purple,
-            points: result.points
-                .map((e) => LatLng(e.latitude, e.longitude))
-                .toList()));
-      });
-    }
-  }
+  //   if (result.points.isNotEmpty) {
+  //     setState(() {
+  //       _polylines.add(Polyline(
+  //           polylineId: PolylineId('route'),
+  //           color: TColor.purple,
+  //           points: result.points
+  //               .map((e) => LatLng(e.latitude, e.longitude))
+  //               .toList()));
+  //     });
+  //   }
+  // }
 
   var chandmari = LatLng(25.379155524365572, 82.97050556177106);
   var bhojubeer = LatLng(35.299080123028, 82.97566495370323);
@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> {
 
     if (_selectedLocationCoords != null && _selectedDestinationCoords != null) {
       getDistance();
-      getPolylines();
+      // getPolylines();
 
       print('Distance: $distanceInKm');
       print('Total Fare: $totalFare');
@@ -178,18 +178,24 @@ class _HomePageState extends State<HomePage> {
     // _mapController?.animateCamera(CameraUpdate.newCameraPosition(
     //     CameraPosition(target: LatLng(lat, lon), zoom: 19)));
     Location location = Location();
+    bool _isLocationEnabled = await location.serviceEnabled();
     PermissionStatus permission = await location.hasPermission();
     if (permission == PermissionStatus.denied) {
       permission = await location.requestPermission();
     }
     if (permission == PermissionStatus.granted) {
-      LocationData locationData = await location.getLocation();
-      setState(() {
-        lat = locationData.latitude!;
-        lon = locationData.longitude!;
-      });
-      _mapController?.animateCamera(CameraUpdate.newCameraPosition(
-          CameraPosition(target: LatLng(lat, lon), zoom: 19)));
+      if (!_isLocationEnabled) {
+        _isLocationEnabled = await location.requestService();
+      } else {
+        location.onLocationChanged.listen((LocationData currentLocation) {
+          setState(() {
+            lat = currentLocation.latitude!;
+            lon = currentLocation.longitude!;
+          });
+          _mapController?.animateCamera(CameraUpdate.newCameraPosition(
+              CameraPosition(target: LatLng(lat, lon), zoom: 19)));
+        });
+      }
     }
   }
 
@@ -255,7 +261,7 @@ class _HomePageState extends State<HomePage> {
                                 color: Colors.white,
                               )),
                         ),
-                        Image.asset('assets/name.png'),
+                        Image.asset('assets/namee.png'),
                         GestureDetector(
                           onTap: () => {
                             Navigator.push(
@@ -328,7 +334,6 @@ class _HomePageState extends State<HomePage> {
                                 style: TextStyle(
                                     color: TColor.black,
                                     fontSize: 20,
-                                    fontFamily: "San Fransisco",
                                     fontWeight: FontWeight.bold)),
                             Container(
                               height: 10,
@@ -491,7 +496,6 @@ class _HomePageState extends State<HomePage> {
                         style: TextStyle(
                             color: TColor.white,
                             fontSize: 20,
-                            fontFamily: "San Fransisco",
                             fontWeight: FontWeight.bold)),
                   ],
                 ),
@@ -534,6 +538,13 @@ class _HomePageState extends State<HomePage> {
     }
 
     Navigator.push(
-        context, MaterialPageRoute(builder: (context) => BookCycle(price: totalFare, startingPoint: _selectedLocation, finalPoint: _selectedDestination,)));
+        context,
+        MaterialPageRoute(
+            builder: (context) => BookCycle(
+                  price: totalFare.toInt(),
+                  startingPoint: _selectedLocation,
+                  finalPoint: _selectedDestination,
+                  distance: distanceInKm!.toInt(),
+                )));
   }
 }

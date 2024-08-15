@@ -8,4 +8,7 @@ class TColor {
   static Color get textFill => const Color(0xffFAFAFA);
   static Color get borderStroke => const Color(0xffEDEDED);
   static Color get textColor => const Color(0xff656565);
+  static Color get locationPinColor => const Color(0xffF52D56);
+  static Color get rideContainer => const Color(0xffFAFAFA);
+  static Color get rideTextColor => const Color(0xffAAAAAA);
 }

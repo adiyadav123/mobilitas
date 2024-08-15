@@ -13,14 +13,16 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BookCycle extends StatefulWidget {
-  final double? price;
+  final int? price;
   final String? startingPoint;
   final String? finalPoint;
+  final int? distance;
   const BookCycle(
       {super.key,
       required this.price,
       required this.startingPoint,
-      required this.finalPoint});
+      required this.finalPoint,
+      required this.distance});
 
   @override
   State<BookCycle> createState() => _BookCycleState();
@@ -196,6 +198,7 @@ class _BookCycleState extends State<BookCycle> {
   }
 
   void updateFirebase() async {
+    num distance = widget.distance ?? 0;
     var user = FirebaseAuth.instance.currentUser;
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     DocumentReference documentReference =
@@ -210,15 +213,16 @@ class _BookCycleState extends State<BookCycle> {
       'rides': {
         'ride${Random().nextInt(100)}': {
           'endTime': Timestamp.now(),
-          'price': 10,
+          'price': widget.price,
           'review': 4,
           'startPoint': widget.startingPoint,
           'finalPoint': widget.finalPoint,
-          'startTime': Timestamp.now()
+          'startTime': Timestamp.now(),
+          'distance': widget.distance
         }
       },
       'totalSpent': (currentAmount.toInt()) + (widget.price!).toInt(),
-      'totalDistance': (currentDistance).toInt() + widget.price! ~/ 2,
+      'totalDistance': (currentDistance).toInt() + distance.toInt(),
       'totalRides': (currentRides).toInt() + 1
     };
 
@@ -272,7 +276,6 @@ class _BookCycleState extends State<BookCycle> {
                           style: TextStyle(
                               color: Colors.white,
                               fontSize: 25,
-                              fontFamily: "Sans Fransisco",
                               fontWeight: FontWeight.bold),
                         ),
                         SizedBox(
@@ -305,7 +308,6 @@ class _BookCycleState extends State<BookCycle> {
                             style: TextStyle(
                                 color: TColor.black,
                                 fontSize: 20,
-                                fontFamily: "Sans Fransisco",
                                 fontWeight: FontWeight.bold),
                           ),
                         ),

@@ -1,9 +1,11 @@
+import 'dart:ffi';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:greenware/booking/RideHistory.dart';
 import 'package:greenware/colorextensions.dart';
 import 'package:greenware/home/home.dart';
 import 'package:greenware/login/phone.dart';
@@ -89,6 +91,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    int carbon = 0;
+    if (distance != null) {
+      setState(() {
+        carbon = (double.parse(distance!) * 0.1).toInt();
+      });
+    }
+
     return Scaffold(
         backgroundColor: TColor.purple,
         body: SafeArea(
@@ -126,7 +135,6 @@ class _ProfilePageState extends State<ProfilePage> {
                               style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 25,
-                                  fontFamily: "Sans Fransisco",
                                   fontWeight: FontWeight.bold),
                             ),
                             SizedBox(
@@ -181,9 +189,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Text(
                           name,
                           style: TextStyle(
-                              fontFamily: "Sans Fransisco",
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold),
+                              fontSize: 22, fontWeight: FontWeight.bold),
                         ),
                         SizedBox(
                           height: 20,
@@ -191,8 +197,14 @@ class _ProfilePageState extends State<ProfilePage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            cards(
-                                "Trips", "${rides ?? '0'}", Icons.bike_scooter),
+                            GestureDetector(
+                              onTap: () => Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) {
+                                return RideHistoryWidget();
+                              })),
+                              child: cards("Trips", "${rides ?? '0'}",
+                                  Icons.bike_scooter),
+                            ),
                             cards("Coupons", "1", Icons.card_giftcard),
                             cards("Spent", "${money ?? 0}", Icons.payment),
                           ],
@@ -205,7 +217,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           children: [
                             cards("Distance", "${distance ?? '0'}", Icons.map),
                             cards("Pay Later", "0", Icons.currency_rupee),
-                            cards("Carbon", "1650g", Icons.eco),
+                            cards("Carbon", "${carbon}g", Icons.eco),
                           ],
                         ),
                         SizedBox(
@@ -220,7 +232,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         SizedBox(
                           height: 20,
                         ),
-                        navigation(HomePage(), "Rides", "View all rides"),
+                        navigation(
+                            RideHistoryWidget(), "Rides", "View all rides"),
                         SizedBox(
                           height: 50,
                         ),
@@ -235,52 +248,55 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget navigation(route, title1, title2) {
-    return Column(
-      children: [
-        Row(children: [
-          SizedBox(
-            width: 10,
-          ),
-          Text(
-            title1,
-            style: TextStyle(
-                fontFamily: "Sans Fransisco",
-                fontSize: 18,
-                fontWeight: FontWeight.bold),
-          ),
-        ]),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              height: 50,
-              width: MediaQuery.of(context).size.width - 50,
-              decoration: BoxDecoration(
-                color: TColor.textFill,
-                border: Border.all(color: TColor.borderStroke),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
-                    child: Text(title2),
-                  ),
-                  Spacer(),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: TColor.textColor,
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                ],
-              ),
+    return GestureDetector(
+      onTap: () =>
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return route;
+      })),
+      child: Column(
+        children: [
+          Row(children: [
+            SizedBox(
+              width: 10,
             ),
-          ],
-        ),
-      ],
+            Text(
+              title1,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                height: 50,
+                width: MediaQuery.of(context).size.width - 50,
+                decoration: BoxDecoration(
+                  color: TColor.textFill,
+                  border: Border.all(color: TColor.borderStroke),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                      child: Text(title2),
+                    ),
+                    Spacer(),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: TColor.textColor,
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -294,10 +310,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             Text(
               title,
-              style: TextStyle(
-                  fontFamily: "Sans Fransisco",
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ]),
           Row(

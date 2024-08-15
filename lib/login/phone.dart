@@ -51,7 +51,6 @@ class _PhoneLoginState extends State<PhoneLogin> {
                               style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 25,
-                                  fontFamily: "Sans Fransisco",
                                   fontWeight: FontWeight.bold),
                             ),
                             SizedBox(
@@ -100,7 +99,6 @@ class _PhoneLoginState extends State<PhoneLogin> {
                                 style: TextStyle(
                                     color: Colors.black,
                                     fontSize: 16,
-                                    fontFamily: "Sans Fransisco",
                                     fontWeight: FontWeight.bold),
                               ),
                             ],
@@ -142,7 +140,6 @@ class _PhoneLoginState extends State<PhoneLogin> {
                                             hintStyle: TextStyle(
                                                 color: TColor.textColor,
                                                 fontSize: 16,
-                                                fontFamily: "Sans Fransisco",
                                                 fontWeight: FontWeight.bold),
                                             border: InputBorder.none,
                                             contentPadding:
@@ -180,7 +177,6 @@ class _PhoneLoginState extends State<PhoneLogin> {
                                             hintStyle: TextStyle(
                                                 color: TColor.textColor,
                                                 fontSize: 16,
-                                                fontFamily: "Sans Fransisco",
                                                 fontWeight: FontWeight.bold),
                                             border: InputBorder.none,
                                             contentPadding:
@@ -227,6 +223,12 @@ class _PhoneLoginState extends State<PhoneLogin> {
       controller.stop();
       controller.reset();
       showToast("Please enter a valid phone number", context: context);
+      return;
+    }
+    if (_nameController.text.isEmpty) {
+      controller.stop();
+      controller.reset();
+      showToast("Please enter your name", context: context);
       return;
     }
     if (_phoneController.text.isNotEmpty) {

@@ -170,28 +170,17 @@ class _LoginState extends State<Login> {
         // get the user
         User? user = value.user;
         if (user != null) {
-          if (user.uid != null) {
-            DocumentReference ref = firestore.collection('users').doc(user.uid);
-
-            if (ref != null) {
-              ref.get().then((DocumentSnapshot snapshot) {
-                if (snapshot.exists) {
-                  Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const HomePage()));
-                } else {
-                  Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const PhoneLogin()));
-                }
-              });
+          DocumentReference ref = firestore.collection('users').doc(user.uid);
+        
+          ref.get().then((DocumentSnapshot snapshot) {
+            if (snapshot.exists) {
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => const HomePage()));
+            } else {
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => const PhoneLogin()));
             }
-          } else {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => const PhoneLogin()));
-          }
+          });
         }
       });
     } catch (e) {

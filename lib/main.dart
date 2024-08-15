@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:greenware/booking/RideHistory.dart';
 import 'package:greenware/booking/book.dart';
 import 'package:greenware/colorextensions.dart';
 import 'package:greenware/firebase_options.dart';
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
               theme: ThemeData(useMaterial3: true, primaryColor: TColor.purple),
               debugShowCheckedModeBanner: false,
               title: 'Mobilitas',
-              home: HomePage(),
+              home: const RideHistoryWidget(),
             );
           } else {
             return MaterialApp(
@@ -56,7 +57,7 @@ class MyApp extends StatelessWidget {
                     brightness: Brightness.dark),
               ),
               title: 'Mobilitas',
-              home: Login(),
+              home: const Login(),
             );
           }
         });

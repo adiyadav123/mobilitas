@@ -119,7 +119,6 @@ class _OTPScreenState extends State<OTPScreen> {
                             style: TextStyle(
                                 color: TColor.black,
                                 fontSize: 19,
-                                fontFamily: "Google Sans",
                                 fontWeight: FontWeight.bold),
                           ),
                           SizedBox(
@@ -178,16 +177,7 @@ class _OTPScreenState extends State<OTPScreen> {
             'credits': 100,
             'totalRides': 0,
             'totalSpent': 0,
-            'rides': {
-              'ride1': {
-                'endTime': Timestamp.now(), // Replace with actual endTime
-                'price': 0,
-                'review': 0,
-                'startPoint': 'Demo Data',
-                'finalPoint': 'Demo Data',
-                'startTime': Timestamp.now() // Replace with actual startTime
-              }
-            }
+            'rides': {}
           };
 
           await firestore
